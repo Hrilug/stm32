@@ -22,7 +22,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
+#include "ssd1306.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -62,6 +63,20 @@ static void MX_USART2_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+uint16_t ADC_Read(uint32_t Channel)
+{
+	ADC_ChannelConfTypeDef sConfig = {0};
+	sConfig.Channel = Channel;                                         /* 通道 */
+	sConfig.Rank = ADC_REGULAR_RANK_1;                              
+	sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;                  /* 采样时间 */
+	if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)             
+	{
+		Error_Handler();
+	}
+	HAL_ADC_Start(&hadc1);
+	HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+	return (uint16_t)HAL_ADC_GetValue(&hadc1);
+}
 
 /* USER CODE END 0 */
 
@@ -81,7 +96,8 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+	char key[6]="000000";
+	uint8_t mode=0;
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -97,7 +113,11 @@ int main(void)
   MX_I2C1_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-
+	ssd1306_Init(&hi2c1);
+	ssd1306_SetCursor(20,20);
+	ssd1306_WriteString((unsigned char*)"Hello",Font_16x26,0x01);
+	ssd1306_UpdateScreen(&hi2c1);
+	HAL_Delay(1000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -107,6 +127,61 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+		
+		key[0]=HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_5);
+		key[1]=HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_4);
+		key[2]=HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_3);
+		key[3]=HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_15);
+		key[4]=HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_12);
+		key[5]=HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_11);
+		
+		uint16_t ADC_Value[3];
+		ADC_Value[0] = ADC_Read(ADC_CHANNEL_7);  
+		ADC_Value[1] = ADC_Read(ADC_CHANNEL_6);
+		ADC_Value[2] = ADC_Read(ADC_CHANNEL_5);
+		char ADC_Channel1[4],ADC_Channel2[4],ADC_Channel3[4];
+		sprintf(&ADC_Channel1[0],"%u",ADC_Value[0]);
+		sprintf(&ADC_Channel2[0],"%u",ADC_Value[1]);
+		sprintf(&ADC_Channel3[0],"%u",ADC_Value[2]);
+		
+		for (int i=1;i<=4;i++){
+			HAL_UART_Transmit(&huart2,(uint8_t*)(key[i]|0x30),1,20);
+		}
+		HAL_UART_Transmit(&huart2,(uint8_t*)&ADC_Channel1[0],4,20);
+		HAL_UART_Transmit(&huart2,(uint8_t*)&ADC_Channel2[0],4,20);
+		HAL_UART_Transmit(&huart2,(uint8_t*)&ADC_Channel3[0],4,20);
+		HAL_UART_Transmit(&huart2,(uint8_t*)"\n",1,20);
+		
+				
+		if (key[0]==0){
+			mode =0;
+		}
+		else if(key[5]==0){
+			mode =1;
+		}
+		
+		if (mode==0){
+		ssd1306_Fill(0x00);
+		ssd1306_SetCursor(0,0);
+		ssd1306_WriteString((uint8_t*)(key[1]|0x30),Font_7x10,0x01);
+		ssd1306_SetCursor(0,15);
+		ssd1306_WriteString((uint8_t*)(key[2]|0x30),Font_7x10,0x01);
+		ssd1306_SetCursor(0,30);
+		ssd1306_WriteString((uint8_t*)(key[3]|0x30),Font_7x10,0x01);
+		ssd1306_SetCursor(0,45);
+		ssd1306_WriteString((uint8_t*)(key[4]|0x30),Font_7x10,0x01);
+		ssd1306_UpdateScreen(&hi2c1);
+		}
+		else if(mode==1){
+		ssd1306_Fill(0x00);
+		ssd1306_SetCursor(0,0);
+		ssd1306_WriteString((uint8_t*)&ADC_Channel1[0],Font_11x18,0x01);
+			ssd1306_SetCursor(0,20);
+		ssd1306_WriteString((uint8_t*)&ADC_Channel2[0],Font_11x18,0x01);
+			ssd1306_SetCursor(0,40);
+		ssd1306_WriteString((uint8_t*)&ADC_Channel3[0],Font_11x18,0x01);
+		ssd1306_UpdateScreen(&hi2c1);
+		}
   }
   /* USER CODE END 3 */
 }
@@ -173,12 +248,12 @@ static void MX_ADC1_Init(void)
   /** Common config
   */
   hadc1.Instance = ADC1;
-  hadc1.Init.ScanConvMode = ADC_SCAN_ENABLE;
+  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
   hadc1.Init.ContinuousConvMode = DISABLE;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 3;
+  hadc1.Init.NbrOfConversion = 1;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
     Error_Handler();
@@ -188,22 +263,6 @@ static void MX_ADC1_Init(void)
   sConfig.Channel = ADC_CHANNEL_5;
   sConfig.Rank = ADC_REGULAR_RANK_1;
   sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Configure Regular Channel
-  */
-  sConfig.Channel = ADC_CHANNEL_6;
-  sConfig.Rank = ADC_REGULAR_RANK_2;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Configure Regular Channel
-  */
-  sConfig.Channel = ADC_CHANNEL_7;
-  sConfig.Rank = ADC_REGULAR_RANK_3;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -295,17 +354,17 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
-  /*Configure GPIO pins : PB0 PB1 PB2 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PA11 PA12 PA13 */
-  GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_13;
+  /*Configure GPIO pins : PA11 PA12 PA15 */
+  GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_15;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PB3 PB4 PB5 */
+  GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 }
 
