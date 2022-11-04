@@ -114,8 +114,8 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 	ssd1306_Init(&hi2c1);
-	ssd1306_SetCursor(20,20);
-	ssd1306_WriteString((unsigned char*)"Hello",Font_16x26,0x01);
+	ssd1306_SetCursor(15,15);
+	ssd1306_WriteString((unsigned char*)"HRILUG",Font_16x26,0x01);
 	ssd1306_UpdateScreen(&hi2c1);
 	HAL_Delay(1000);
   /* USER CODE END 2 */
