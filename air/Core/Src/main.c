@@ -1,27 +1,28 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2022 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * <h2><center>&copy; Copyright (c) 2022 STMicroelectronics.
+ * All rights reserved.</center></h2>
+ *
+ * This software component is licensed by ST under BSD 3-Clause license,
+ * the "License"; You may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at:
+ *                        opensource.org/licenses/BSD-3-Clause
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "stdio.h"
 #include "ssd1306.h"
 /* USER CODE END Includes */
 
@@ -64,29 +65,29 @@ static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN 0 */
 uint16_t ADC_Read(uint32_t Channel)
 {
-	ADC_ChannelConfTypeDef sConfig = {0};
-	sConfig.Channel = Channel;                                         /* 通道 */
-	sConfig.Rank = ADC_REGULAR_RANK_1;                              
-	sConfig.SamplingTime = ADC_SAMPLETIME_55CYCLES_5;                  /* 采样时间 */
-	if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)             
-	{
-		Error_Handler();
-	}
-	HAL_ADC_Start(&hadc1);
-	HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-	return (uint16_t)HAL_ADC_GetValue(&hadc1);
+  ADC_ChannelConfTypeDef sConfig = {0};
+  sConfig.Channel = Channel; /* 通道 */
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5; /* 采样时间 */
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  HAL_ADC_Start(&hadc1);
+  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+  return (uint16_t)HAL_ADC_GetValue(&hadc1);
 }
 /* USER CODE END 0 */
 
 /**
-  * @brief  The application entry point.
-  * @retval int
-  */
+ * @brief  The application entry point.
+ * @retval int
+ */
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	char key[6]="000000";
-	uint8_t mode=0;
+  char key[6] = "000000";
+  uint8_t mode = 0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -111,11 +112,11 @@ int main(void)
   MX_I2C1_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-	ssd1306_Init(&hi2c1);
-	ssd1306_SetCursor(15,15);
-	ssd1306_WriteString((unsigned char*)"HRILUG",Font_16x26,0x01);
-	ssd1306_UpdateScreen(&hi2c1);
-	HAL_Delay(1000);
+  ssd1306_Init(&hi2c1);
+  ssd1306_SetCursor(15, 15);
+  ssd1306_WriteString((unsigned char *)"HRILUG", Font_16x26, 0x01);
+  ssd1306_UpdateScreen(&hi2c1);
+  HAL_Delay(1000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -125,69 +126,76 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    		
-		key[0]=HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_5);
-		key[1]=HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_4);
-		key[2]=HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_3);
-		key[3]=HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_15);
-		key[4]=HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_12);
-		key[5]=HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_11);
-		
-		uint16_t ADC_Value[3];
-		ADC_Value[0] = ADC_Read(ADC_CHANNEL_7);  
-		ADC_Value[1] = ADC_Read(ADC_CHANNEL_6);
-		ADC_Value[2] = ADC_Read(ADC_CHANNEL_5);
-		char ADC_Channel1[4],ADC_Channel2[4],ADC_Channel3[4];
-		sprintf(&ADC_Channel1[0],"%u",ADC_Value[0]);
-		sprintf(&ADC_Channel2[0],"%u",ADC_Value[1]);
-		sprintf(&ADC_Channel3[0],"%u",ADC_Value[2]);
-		
-		for (int i=1;i<=4;i++){
-			HAL_UART_Transmit(&huart2,(uint8_t*)(key[i]|0x30),1,20);
-		}
-		HAL_UART_Transmit(&huart2,(uint8_t*)&ADC_Channel1[0],4,20);
-		HAL_UART_Transmit(&huart2,(uint8_t*)&ADC_Channel2[0],4,20);
-		HAL_UART_Transmit(&huart2,(uint8_t*)&ADC_Channel3[0],4,20);
-		HAL_UART_Transmit(&huart2,(uint8_t*)"\n",1,20);
-		
-				
-		if (key[0]==0){
-			mode =0;
-		}
-		else if(key[5]==0){
-			mode =1;
-		}
-		
-		if (mode==0){
-		ssd1306_Fill(0x00);
-		ssd1306_SetCursor(0,0);
-		ssd1306_WriteString((uint8_t*)(key[1]|0x30),Font_7x10,0x01);
-		ssd1306_SetCursor(0,15);
-		ssd1306_WriteString((uint8_t*)(key[2]|0x30),Font_7x10,0x01);
-		ssd1306_SetCursor(0,30);
-		ssd1306_WriteString((uint8_t*)(key[3]|0x30),Font_7x10,0x01);
-		ssd1306_SetCursor(0,45);
-		ssd1306_WriteString((uint8_t*)(key[4]|0x30),Font_7x10,0x01);
-		ssd1306_UpdateScreen(&hi2c1);
-		}
-		else if(mode==1){
-		ssd1306_Fill(0x00);
-		ssd1306_SetCursor(0,0);
-		ssd1306_WriteString((uint8_t*)&ADC_Channel1[0],Font_11x18,0x01);
-			ssd1306_SetCursor(0,20);
-		ssd1306_WriteString((uint8_t*)&ADC_Channel2[0],Font_11x18,0x01);
-			ssd1306_SetCursor(0,40);
-		ssd1306_WriteString((uint8_t*)&ADC_Channel3[0],Font_11x18,0x01);
-		ssd1306_UpdateScreen(&hi2c1);
-		}
+
+    key[0] = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_5);
+    key[1] = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4);
+    key[2] = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_3);
+    key[3] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15);
+    key[4] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_12);
+    key[5] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_11);
+
+    uint16_t ADC_Value[3];
+    ADC_Value[0] = ADC_Read(ADC_CHANNEL_7);
+    ADC_Value[1] = ADC_Read(ADC_CHANNEL_6);
+    ADC_Value[2] = ADC_Read(ADC_CHANNEL_5);
+    char ADC_Channel1[4], ADC_Channel2[4], ADC_Channel3[4];
+    sprintf(&ADC_Channel1[0], "%u", ADC_Value[0]);
+    sprintf(&ADC_Channel2[0], "%u", ADC_Value[1]);
+    sprintf(&ADC_Channel3[0], "%u", ADC_Value[2]);
+
+    for (int i = 1; i <= 4; i++)
+    {
+      HAL_UART_Transmit(&huart2, (uint8_t *)(key[i] | 0x30), 1, 20);
+    }
+    HAL_UART_Transmit(&huart2, (uint8_t *)&ADC_Channel1[0], 4, 20);
+    HAL_UART_Transmit(&huart2, (uint8_t *)&ADC_Channel2[0], 4, 20);
+    HAL_UART_Transmit(&huart2, (uint8_t *)&ADC_Channel3[0], 4, 20);
+    HAL_UART_Transmit(&huart2, (uint8_t *)"\n", 1, 20);
+
+    if (key[0] == 0)
+    {
+      mode = 0;
+    }
+    else if (key[5] == 0)
+    {
+      mode = 1;
+    }
+
+    // mode==0 --> ADC MODE
+    if (mode == 0)
+    {
+      HAL_GPIO_WritePin(GPIOA,GPIO_PIN_12,GPIO_PIN_RESET);
+      ssd1306_Fill(0x00);
+      ssd1306_SetCursor(0, 0);
+      ssd1306_WriteString((uint8_t *)&ADC_Channel1[0], Font_11x18, 0x01);
+      ssd1306_SetCursor(0, 20);
+      ssd1306_WriteString((uint8_t *)&ADC_Channel2[0], Font_11x18, 0x01);
+      ssd1306_SetCursor(0, 40);
+      ssd1306_WriteString((uint8_t *)&ADC_Channel3[0], Font_11x18, 0x01);
+    }
+    else if (mode == 1)
+    {
+      HAL_GPIO_WritePin(GPIOA,GPIO_PIN_12,GPIO_PIN_SET);
+      ssd1306_UpdateScreen(&hi2c1);
+      ssd1306_Fill(0x00);
+      ssd1306_SetCursor(0, 0);
+      ssd1306_WriteString((uint8_t *)(key[1] | 0x30), Font_7x10, 0x01);
+      ssd1306_SetCursor(0, 15);
+      ssd1306_WriteString((uint8_t *)(key[2] | 0x30), Font_7x10, 0x01);
+      ssd1306_SetCursor(0, 30);
+      ssd1306_WriteString((uint8_t *)(key[3] | 0x30), Font_7x10, 0x01);
+      ssd1306_SetCursor(0, 45);
+      ssd1306_WriteString((uint8_t *)(key[4] | 0x30), Font_7x10, 0x01);
+      ssd1306_UpdateScreen(&hi2c1);
+    }
   }
   /* USER CODE END 3 */
 }
 
 /**
-  * @brief System Clock Configuration
-  * @retval None
-  */
+ * @brief System Clock Configuration
+ * @retval None
+ */
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
@@ -195,8 +203,8 @@ void SystemClock_Config(void)
   RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
-  * in the RCC_OscInitTypeDef structure.
-  */
+   * in the RCC_OscInitTypeDef structure.
+   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
@@ -206,9 +214,8 @@ void SystemClock_Config(void)
     Error_Handler();
   }
   /** Initializes the CPU, AHB and APB buses clocks
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+   */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
@@ -227,10 +234,10 @@ void SystemClock_Config(void)
 }
 
 /**
-  * @brief ADC1 Initialization Function
-  * @param None
-  * @retval None
-  */
+ * @brief ADC1 Initialization Function
+ * @param None
+ * @retval None
+ */
 static void MX_ADC1_Init(void)
 {
 
@@ -244,7 +251,7 @@ static void MX_ADC1_Init(void)
 
   /* USER CODE END ADC1_Init 1 */
   /** Common config
-  */
+   */
   hadc1.Instance = ADC1;
   hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
   hadc1.Init.ContinuousConvMode = DISABLE;
@@ -257,7 +264,7 @@ static void MX_ADC1_Init(void)
     Error_Handler();
   }
   /** Configure Regular Channel
-  */
+   */
   sConfig.Channel = ADC_CHANNEL_5;
   sConfig.Rank = ADC_REGULAR_RANK_1;
   sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
@@ -268,14 +275,13 @@ static void MX_ADC1_Init(void)
   /* USER CODE BEGIN ADC1_Init 2 */
 
   /* USER CODE END ADC1_Init 2 */
-
 }
 
 /**
-  * @brief I2C1 Initialization Function
-  * @param None
-  * @retval None
-  */
+ * @brief I2C1 Initialization Function
+ * @param None
+ * @retval None
+ */
 static void MX_I2C1_Init(void)
 {
 
@@ -302,14 +308,13 @@ static void MX_I2C1_Init(void)
   /* USER CODE BEGIN I2C1_Init 2 */
 
   /* USER CODE END I2C1_Init 2 */
-
 }
 
 /**
-  * @brief USART2 Initialization Function
-  * @param None
-  * @retval None
-  */
+ * @brief USART2 Initialization Function
+ * @param None
+ * @retval None
+ */
 static void MX_USART2_UART_Init(void)
 {
 
@@ -335,14 +340,13 @@ static void MX_USART2_UART_Init(void)
   /* USER CODE BEGIN USART2_Init 2 */
 
   /* USER CODE END USART2_Init 2 */
-
 }
 
 /**
-  * @brief GPIO Initialization Function
-  * @param None
-  * @retval None
-  */
+ * @brief GPIO Initialization Function
+ * @param None
+ * @retval None
+ */
 static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -363,17 +367,16 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PA11 PA12 PA15 */
-  GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_15;
+  GPIO_InitStruct.Pin = GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_15;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PB3 PB4 PB5 */
-  GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5;
+  GPIO_InitStruct.Pin = GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
 }
 
 /* USER CODE BEGIN 4 */
@@ -381,9 +384,9 @@ static void MX_GPIO_Init(void)
 /* USER CODE END 4 */
 
 /**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
+ * @brief  This function is executed in case of error occurrence.
+ * @retval None
+ */
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
@@ -395,14 +398,14 @@ void Error_Handler(void)
   /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
 /**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
+ * @brief  Reports the name of the source file and the source line number
+ *         where the assert_param error has occurred.
+ * @param  file: pointer to the source file name
+ * @param  line: assert_param error line source number
+ * @retval None
+ */
 void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */

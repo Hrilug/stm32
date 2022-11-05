@@ -28,4 +28,5 @@ air/main.o: ..\Core\Src\main.c ..\Core\Inc\main.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_i2c.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_pwr.h \
   ..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_uart.h \
-  ..\Core\Inc\ssd1306.h ..\Core\Inc\fonts.h
+  C:\Keil_v5\ARM\ARMCLANG\Bin\..\include\stdio.h ..\Core\Inc\ssd1306.h \
+  ..\Core\Inc\fonts.h
