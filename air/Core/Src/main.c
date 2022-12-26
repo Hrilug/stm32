@@ -164,7 +164,7 @@ int main(void)
     // mode==0 --> ADC MODE
     if (mode == 0)
     {
-      HAL_GPIO_WritePin(GPIOA,GPIO_PIN_12,GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(GPIOB,GPIO_PIN_12,GPIO_PIN_RESET);
       ssd1306_Fill(0x00);
       ssd1306_SetCursor(0, 0);
       ssd1306_WriteString((uint8_t *)&ADC_Channel1[0], Font_11x18, 0x01);
@@ -172,20 +172,24 @@ int main(void)
       ssd1306_WriteString((uint8_t *)&ADC_Channel2[0], Font_11x18, 0x01);
       ssd1306_SetCursor(0, 40);
       ssd1306_WriteString((uint8_t *)&ADC_Channel3[0], Font_11x18, 0x01);
+      ssd1306_UpdateScreen(&hi2c1);
     }
     else if (mode == 1)
     {
-      HAL_GPIO_WritePin(GPIOA,GPIO_PIN_12,GPIO_PIN_SET);
-      ssd1306_UpdateScreen(&hi2c1);
+      HAL_GPIO_WritePin(GPIOB,GPIO_PIN_12,GPIO_PIN_SET);
       ssd1306_Fill(0x00);
       ssd1306_SetCursor(0, 0);
-      ssd1306_WriteString((uint8_t *)(key[1] | 0x30), Font_7x10, 0x01);
+      ssd1306_WriteString((uint8_t *)"key1:", Font_7x10, 0x01);
+      ssd1306_WriteString((uint8_t *)key[1], Font_7x10, 0x01);
       ssd1306_SetCursor(0, 15);
-      ssd1306_WriteString((uint8_t *)(key[2] | 0x30), Font_7x10, 0x01);
+      ssd1306_WriteString((uint8_t *)"key2:", Font_7x10, 0x01);
+      ssd1306_WriteString((uint8_t *)key[2], Font_7x10, 0x01);
       ssd1306_SetCursor(0, 30);
-      ssd1306_WriteString((uint8_t *)(key[3] | 0x30), Font_7x10, 0x01);
+      ssd1306_WriteString((uint8_t *)"key3:", Font_7x10, 0x01);
+      ssd1306_WriteString((uint8_t *)key[3], Font_7x10, 0x01);
       ssd1306_SetCursor(0, 45);
-      ssd1306_WriteString((uint8_t *)(key[4] | 0x30), Font_7x10, 0x01);
+      ssd1306_WriteString((uint8_t *)"key4:", Font_7x10, 0x01);
+      ssd1306_WriteString((uint8_t *)key[4], Font_7x10, 0x01);
       ssd1306_UpdateScreen(&hi2c1);
     }
   }

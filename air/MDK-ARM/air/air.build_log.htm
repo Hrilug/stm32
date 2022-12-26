@@ -27,11 +27,24 @@ Project File Date:  11/05/2022
 <h2>Output:</h2>
 *** Using Compiler 'V6.18', folder: 'C:\Keil_v5\ARM\ARMCLANG\Bin'
 Build target 'air'
+../Core/Src/main.c(183): warning: cast to 'uint8_t *' (aka 'unsigned char *') from smaller integer type 'char' [-Wint-to-pointer-cast]
+      ssd1306_WriteString((uint8_t *)key[1], Font_7x10, 0x01);
+                          ^~~~~~~~~~~~~~~~~
+../Core/Src/main.c(186): warning: cast to 'uint8_t *' (aka 'unsigned char *') from smaller integer type 'char' [-Wint-to-pointer-cast]
+      ssd1306_WriteString((uint8_t *)key[2], Font_7x10, 0x01);
+                          ^~~~~~~~~~~~~~~~~
+../Core/Src/main.c(189): warning: cast to 'uint8_t *' (aka 'unsigned char *') from smaller integer type 'char' [-Wint-to-pointer-cast]
+      ssd1306_WriteString((uint8_t *)key[3], Font_7x10, 0x01);
+                          ^~~~~~~~~~~~~~~~~
+../Core/Src/main.c(192): warning: cast to 'uint8_t *' (aka 'unsigned char *') from smaller integer type 'char' [-Wint-to-pointer-cast]
+      ssd1306_WriteString((uint8_t *)key[4], Font_7x10, 0x01);
+                          ^~~~~~~~~~~~~~~~~
+4 warnings generated.
 compiling main.c...
 linking...
-Program Size: Code=10878 RO-data=10574 RW-data=36 ZI-data=2260  
+Program Size: Code=10934 RO-data=10574 RW-data=36 ZI-data=2260  
 FromELF: creating hex file...
-"air\air.axf" - 0 Error(s), 0 Warning(s).
+"air\air.axf" - 0 Error(s), 4 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -55,7 +68,7 @@ Package Vendor: Keil
 
    * Component: ARM::CMSIS:CORE:5.6.0
       Include file:  CMSIS/Core/Include/tz_context.h
-Build Time Elapsed:  00:00:04
+Build Time Elapsed:  00:00:03
 </pre>
 </body>
 </html>
